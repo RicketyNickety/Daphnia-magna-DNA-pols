@@ -1,0 +1,97 @@
+import os
+
+def makedb(filename):
+    os.system('makeblastdb -in /Users/toes/desktop/thesis/blasting/ref_prot_dbs/' + filename + ' -dbtype nucl')
+def blastn(q,t):
+    nofasta = t.replace('.fasta','')
+    os.system('blastn -query /Users/toes/desktop/thesis/blasting/ref_gene_seqs/' + q + ' -db /Users/toes/Desktop/Thesis/blasting/wgs_dbs/' + t + ' > /Users/toes/Desktop/Thesis/blasting/nuc_alignments/' + q + '-' + nofasta)
+def allBlastN():
+    queries = os.listdir('/Users/toes/desktop/thesis/blasting/ref_gene_seqs')
+    queries.remove('.DS_Store')
+    targets = os.listdir('/Users/toes/desktop/thesis/blasting/wgs_dbs')
+    targets.remove('.DS_Store')
+    i = len(targets) - 1
+    while i > -1:
+        if 'nhr' in targets[i] or 'nin' in targets[i] or 'nsq' in targets[i]:
+            targets.remove(targets[i])
+        i -= 1
+    for query in queries:
+        for target in targets:
+            blastn(query,target)
+def extractNums(incoming):
+    file = open('/Users/toes/desktop/thesis/blasting/nuc_alignments/' + incoming,'r')
+    lies = file.readlines() #list of all the lines in alignment file
+    lines = []              #will be list of only the lines we want to keep, i.e., not headers, footers, or 'Query'
+    for lie in lies:
+        if 'No hits found' in lie:
+            open('/Users/toes/desktop/thesis/blasting/gene_locations/' + incoming,'w').close()
+            new = open('/Users/toes/desktop/thesis/blasting/gene_locations/' + incoming,'w')
+            new.write('NO HITS FOUND')
+            return None
+        if 'Sbjct' in lie or 'Score' in lie:
+            lines.append(lie)
+    lines.pop(0)            #because of the way it is
+    scores = []             #list of times that 'score' appears in alignment
+    for i,j in enumerate(lines):
+        if 'Score' in j:
+            scores.append(i) #index of each occurrence of 'score' to isolate individual ranges in alignment
+    aligns = []             #separates whole alignments into ranges
+    for i in range(0,len(scores)):
+        if i + 1 == len(scores):
+            aligns.append(lines[scores[i]:])
+        else:
+            aligns.append(lines[scores[i]:scores[i+1]])
+    smalligns = []          #isolates first and last lines of each range
+    for align in aligns:
+        smalligns.append([align[1],align[len(align)-1]])
+    nums = {}
+    i = 0
+    for smallign in smalligns: #sets up nicely organized alignment list
+        i += 1
+        nums[str(i)] = smallign
+    for elem in nums:          #makes each smallign into a list and isolates the numbers we want
+        nums[elem][0] = nums[elem][0].split()
+        nums[elem][1] = nums[elem][1].split()
+        nums[elem][0] = nums[elem][0][1]
+        nums[elem][1] = nums[elem][1][3]
+    open('/Users/toes/desktop/thesis/blasting/gene_locations/' + incoming,'w').close()
+    new = open('/Users/toes/desktop/thesis/blasting/gene_locations/' + incoming,'w')
+    toreturn = []
+    for elem in nums:
+        new.write(str(nums[elem]))
+        toreturn.append(elem)
+    new.close()
+    return toreturn
+def extractAllNums():
+    alignments = os.listdir('/Users/toes/desktop/thesis/blasting/nuc_alignments')
+    dictionary = {}
+    for alignment in alignments:
+        if '.DS_Store' not in alignment:
+            dictionary[alignment] = extractNums(alignment)
+    print(dictionary)
+def extractSeqs(genotype,startstop,gene,ref):
+    wgsfile = open('/Users/toes/Desktop/Thesis/blasting/wgs_dbs/FASC.fasta','r')
+    lies = wgsfile.readlines()
+    scaffold = 'a'
+    i = 0
+    for lie in lies:
+        if '00005' in lies[i]:
+            scaffold = lies[i+1]
+    seq = scaffold[startstop[0]:startstop[1]+1]
+def extractAllSeqs():
+    genes = ['alpha_cat','alpha_sub','delta_cat','delta_sub1','delta_sub2','epsilon_cat','epsilon_sub1','epsilon_sub2','epsilon_sub3','eta','gamma_35','gamma_cat','iota','kappa','mu','theta','zeta']
+    refs = ['SK','Xinb3']
+    for geno in genotypes:
+        wgsdb = '/Users/toes/desktop/thesis/blasting/wgs_dbs' + geno
+        for gene in genes:
+            for ref in refs:
+                filename = gene + '_' + ref + '-' + geno
+                file = open('/Users/toes/desktop/thesis/blasting/gene_locations/' + filename,'r')
+                line = file.readlines()
+                if 'NO HITS FOUND' not in line:
+                    print('line = ',line)
+                    spl = list(line[0])
+                    spl.remove('[')
+                    spl.remove(']')
+                    line = ''.join(spl)
+                    print(filename,line)
