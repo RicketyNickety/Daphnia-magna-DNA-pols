@@ -1,0 +1,14 @@
+def oneLine():
+    file = open('/Users/toes/desktop/thesis/blasting/wgs/one/FCSC','r')
+    lines = file.readlines()
+    i = 0
+    while i < len(lines)-2:
+        i += 1
+        if '>' in lines[i+1] or '>' in lines[i]:
+            continue
+        else:
+            lines[i] = lines[i].replace('\n','')
+    open('/Users/toes/desktop/thesis/blasting/wgs/one/FCSCedit','w').close()
+    writing = open('/Users/toes/desktop/thesis/blasting/wgs/one/FCSCedit','w')
+    for line in lines:
+        writing.write(line)
