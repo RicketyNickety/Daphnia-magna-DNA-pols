@@ -1,0 +1,83 @@
+import os
+
+def tBlastN(q,s):
+    query = str(q)
+    subject = str(s)
+    command = 'tblastn -query ~/desktop/thesis/blasting/ref_prot_dbs/' + query + '.fasta -db ~/desktop/thesis/blasting/wgs_dbs/' + subject + '.fasta > ~/Desktop/Thesis/blasting/checking_prots/' + query + '_' + subject
+    os.system(command)
+def allTBlastN(): #WRITE ALGORITHM TO BLASTN REF PROTS AGAINST EXTRACTED GENE SEQS
+    prots = os.listdir('/Users/toes/desktop/thesis/blasting/ref_prot_dbs')
+    i = len(prots) - 1
+    while i > -1:
+        if 'nhr' in prots[i] or 'nin' in prots[i] or 'nsq' in prots[i]:
+            prots.remove(prots[i])
+        i -= 1
+    j = 0
+    while j < len(prots):
+        splitted = list(prots[j])
+        prots[j] = ('').join(splitted[:len(splitted)-6])
+        j += 1
+    genotypes = os.listdir('/Users/toes/desktop/thesis/blasting/wgs_dbs')
+    k = len(genotypes) - 1
+    while k > -1:
+        if 'nhr' in genotypes[k] or 'nin' in genotypes[k] or 'nsq' in genotypes[k] or '.DS_Store' in genotypes[k]:
+            genotypes.remove(genotypes[k])
+        k -= 1
+    m = 0
+    while m < len(genotypes):
+        splitted = list(genotypes[m])
+        genotypes[m] = ('').join(splitted[:len(splitted)-6])
+        m += 1
+    for prot in prots:
+        for genotype in genotypes:
+            tBlastN(prot,genotype)
+def extractNums2(incoming):
+    file = open('/Users/toes/desktop/thesis/blasting/prot_alignments/' + incoming,'r')
+    lies = file.readlines()
+    lines = []
+    for lie in lies:
+        if 'Sbjct' in lie:
+            lines.append(lie)
+    nums = [lines[0].split(),lines[len(lines)-1].split()]
+    startend = [nums[0][1],nums[1][3]]
+    if startend[1] < startend[0]:
+        startend[1], startend[0] = startend[0], startend[1]
+    return startend
+def extractAllNums2():
+    allStartEnds = {}
+    genes = ['alpha', 'alphaSub']#,'delta','epsilon','zeta','eta','gamma','theta','iota','kappa','mu']
+    allQueries = []
+    for gene in genes:
+        allQueries.append(gene + '_ref1_')
+        #allQueries.append(gene + '_ref2_')
+    pops = ['F','G','I']
+    genos = ['A','B','C']
+    allTargets = []
+    for pop in pops:
+        for geno in genos:
+            target = pop + geno + 'SC'
+            allTargets.append(target)
+    allFiles = []
+    for targ in allTargets:
+        for query in allQueries:
+            string = query + targ
+            allFiles.append(string)
+    for file in allFiles:
+        allStartEnds[file] = extractNums2(file)
+    seqLocs = open('/Users/toes/desktop/thesis/blasting/prot_alignments/protLocs.txt','w')
+    for elem in allStartEnds:
+        seqLocs.write(str(elem) + ': ' + str(allStartEnds[elem]) + '\n\n')
+    seqLocs.close()
+def checkSeq(file):
+    query = file
+    subjects = [query + '_SK',query + '_Xinb3']
+    os.system('tblastn -query /Users/toes/desktop/thesis/blasting/ref_prot_seqs/' + query + ' -db ~/desktop/thesis/blasting/ref_gene_dbs/' + subjects[0] + '.fasta > ~/Desktop/Thesis/blasting/checking_prots/' + subjects[0])
+    os.system('tblastn -query /Users/toes/desktop/thesis/blasting/ref_prot_seqs/' + query + ' -db ~/desktop/thesis/blasting/ref_gene_dbs/' + subjects[1] + '.fasta > ~/Desktop/Thesis/blasting/checking_prots/' + subjects[1])
+def checkAllSeqs():
+    protfiles = os.listdir('/Users/toes/desktop/thesis/blasting/ref_prot_seqs')
+    for protfile in protfiles:
+        checkSeq(protfile)
+def makedbs():
+    seqs = os.listdir('/Users/toes/desktop/thesis/blasting/ref_prot_dbs')
+    for seq in seqs:
+        makedb(seq)
