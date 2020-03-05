@@ -1,0 +1,10 @@
+def gatherSeqs(): #puts all gene ref seqs into one file (TheGathering)
+    files = os.listdir('/Users/toes/Desktop/Thesis/blasting/ref_gene_seqs')
+    files.remove('.DS_Store')
+    gathered = open('/Users/toes/Desktop/Thesis/blasting/TheGathering','w')
+    for file in files:
+        working = open('/Users/toes/Desktop/Thesis/blasting/ref_gene_seqs/' + file,'r')
+        lines = working.readlines()
+        gathered.write(lines[0])
+        gathered.write(lines[1] + '\n\n')
+    gathered.close()
