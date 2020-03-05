@@ -1,0 +1,46 @@
+def reverse(seq):
+    newseq = list(seq)
+    i = len(newseq) - 1
+    reverse = []
+    while i >= 0:
+        reverse.append(newseq[i])
+        i -= 1
+    return ''.join(reverse)
+def complement(seq):
+    revDic = {'A':'T','T':'A','C':'G','G':'C','a':'t','t':'a','c':'g','g':'c'}
+    newseq = list(seq)
+    comp = []
+    i = 0
+    while i < len(newseq):
+        comp.append(revDic[seq[i]])
+        i += 1
+    return ''.join(comp)
+def revcomp(seq):
+    return reverse(complement(seq))
+def oneLine(directory):
+    files = os.listdir(directory) #get list of all files in directory
+    #files.remove('.DS_Store')
+    for file in files:
+        working = open(directory + '/' + file,'r')
+        lis = working.readlines()
+        header = ['uh oh!']
+        if 'TAKE' in lis[0]: #check for header 'type'
+            header = lis[0:3] #isolate header
+            del lis[0:3] #remove header
+            i = 0
+            while i < len(lis): #alter each line to remove enter characters
+                lis[i] = lis[i].replace('\n','')
+                i += 1
+        else:               #same stuff
+            header = lis[0]
+            del lis[0]
+            i = 0
+            while i < len(lis):
+                lis[i] = lis[i].replace('\n','')
+                i += 1
+        working.close() #close read-mode file object
+        open(directory + '/' + file,'w').close() #wipe the file contents
+        new = open(directory + '/' + file,'w') #open write-mode
+        new.write(''.join(header)) #add header
+        new.write(''.join(lis)) #add concatenated lines as one 'word'
+        new.close()
